@@ -1,0 +1,37 @@
+services:
+  web:
+    container_name: ocr-fast-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://ocr-redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://ocr-redis:6379/0
+    volumes:
+      - shared-files:/app/files
+
+  celery_worker:
+    container_name: ocr-celery
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    depends_on:
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://ocr-redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://ocr-redis:6379/0
+    volumes:
+      - shared-files:/app/files
+
+  redis:
+    container_name: ocr-redis
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
+volumes:
+  shared-files:
